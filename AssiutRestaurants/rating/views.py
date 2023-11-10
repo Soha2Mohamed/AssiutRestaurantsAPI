@@ -14,7 +14,7 @@ from rest_framework.permissions import IsAuthenticated
 
 #---user functions---
 #create new user account account
-@api_view(['POST'])
+"""@api_view(['POST'])
 def createNewUser(request):
     serializer = UserSerializer(data=request.data)
     username = request.data.get('username')
@@ -30,8 +30,59 @@ def createNewUser(request):
     except Exception as e:
        return Response({'error': str(e)}, status=500)
 
-    return Response({'success': 'User created successfully'}, status=201)
+    return Response({'success': 'User created successfully'}, status=201)"""
 
+
+class UserView(APIView):
+      
+    #create new user
+    def post(self, request):
+        userSerializer = UserSerializer(data = request.data)
+        if userSerializer.is_valid():
+           userSerializer.save()
+        return Response(userSerializer.data, status=status.HTTP_200_OK)
+    #get a specific user or all users
+    def get(self, request, id):
+        
+        if id:
+            user = User.objects.filter(id=id).first()
+            userSerializer = UserSerializer(user)
+
+        else:
+            userQuerySet = User.objects.all()        
+            userSerializer = UserSerializer(userQuerySet, many = True)
+          
+        return Response(userQuerySet.data, status=status.HTTP_200_OK)
+    
+    def put (self, request, id):
+        user = User.objects.filter(id=id).first()
+        if user is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        
+        userSerializer = UserSerializer(user,data = request.data)
+        userSerializer.is_valid(raise_exception=True)
+        userSerializer.save()
+        return Response(userSerializer.data, status=status.HTTP_200_OK)
+    
+    def patch (self, request, id):
+        user = User.objects.filter(id=id).first()
+        print(user)
+        if user is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        #i think we used partial = True here to update specific fields, what it does is to not perform field validation check for the fields which is missing in the request data.
+        userSerializer = UserSerializer(user, data = request.data, partial = True)
+        userSerializer.is_valid(raise_exception=True)
+        userSerializer.save()
+        return Response(userSerializer.data, status=status.HTTP_200_OK)
+        
+    #delete a specific user
+    def delete (self, request, id):
+        user = User.objects.filter(id=id).first()
+        if user is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+       
+        user.delete()
+        return Response(f"user deleted successfully", status=status.HTTP_204_NO_CONTENT)
 
 #create new admin account
 
@@ -41,8 +92,52 @@ def createNewUser(request):
 
 #get user's profile
 
-#get list of restaurants
+class RestaurantView(APIView):
+      
+    #create new restaurant
+    #need to restrict permission soon
+    def post(self, request):
+        restSerializer = RestaurantSerializer(data = request.data)
+        if restSerializer.is_valid():
+           restSerializer.save()
+        return Response(restSerializer.data, status=status.HTTP_200_OK)
 
+    #get list of restaurants
+    def get(self, request):
+      restQuerySet = Restaurant.objects.all()
+      serializer = RestaurantSerializer(restQuerySet, many =True)
+      return Response(serializer.data)
+    
+    #update restaurant
+    def put (self, request, id):
+        rest = Restaurant.objects.filter(id=id).first()
+        if rest is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        
+        restSerializer = RestaurantSerializer(rest,data = request.data)
+        restSerializer.is_valid(raise_exception=True)
+        restSerializer.save()
+        return Response(restSerializer.data, status=status.HTTP_200_OK)
+    
+    #update specific fields in a restaurant
+    def patch (self, request, id):
+        rest = Restaurant.objects.filter(id=id).first()
+        if rest is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        
+        restSerializer = RestaurantSerializer(rest, data = request.data, partial = True)
+        restSerializer.is_valid(raise_exception=True)
+        restSerializer.save()
+        return Response(restSerializer.data, status=status.HTTP_200_OK)
+        
+    #delete a restaurant
+    def delete (self, request, id):
+        rest = Restaurant.objects.filter(id=id).first()
+        if rest is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+       
+        rest.delete()
+        return Response(f"restaurant deleted successfully", status=status.HTTP_204_NO_CONTENT)
 #restaurant's profile
 
 #search by restaurantName

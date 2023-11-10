@@ -50,5 +50,6 @@ class Menu(models.Model):
 def TokenCreate(sender, instance, created , **kwargs):
     if created:
         Token.objects.create(user = instance)
+        
 
 
