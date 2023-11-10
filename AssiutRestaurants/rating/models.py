@@ -1,12 +1,12 @@
 from django.db import models
 
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from rest_framework.authtoken.models import Token
+from django.conf import settings
+from .permissions import permissions
+from django.contrib.auth.models import User
 # Create your models here.
-
-class Customer(models.Model):
-    name = models.CharField(max_length=15)
-    mobile = models.CharField(max_length=11)
-    address = models.TextField(max_length=30)
-
 
 class Restaurant(models.Model):
 
@@ -42,7 +42,13 @@ class Menu(models.Model):
     itemName = models.CharField(max_length=15)
     description = models.TextField(max_length=50)
     category  = models.CharField(max_length=2,choices=Category.choices, default=Category.PIZZA)
-    restaurantID = models.ForeignKey(Restaurant, related_name='menu', on_delete=models.CASCADE)
+    restaurantID = models.OneToOneField(Restaurant, related_name='menu', on_delete=models.CASCADE)
 
+
+#function to create a token automatically everytime a user is created
+@receiver(post_save, sender = settings.AUTH_USER_MODEL)
+def TokenCreate(sender, instance, created , **kwargs):
+    if created:
+        Token.objects.create(user = instance)
 
 
